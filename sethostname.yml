@@ -1,0 +1,17 @@
+---
+- name: hostname rename
+  hosts:
+    - "{{ uat_group | default('server') }}"
+  tasks:
+    - shell: |
+        echo "{{ ansible_host }}"
+        myip="{{ ansible_host }}" 
+        newip="${myip//./-}"
+        echo $newip
+        newhostname=uat-"{{ server_type }}"-$newip
+        echo $newhostname
+        hostnamectl set-hostname $newhostname
+      register: msg
+    - name:
+      debug:
+        msg: "{{ msg }}"

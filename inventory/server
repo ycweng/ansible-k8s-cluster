@@ -1,0 +1,12 @@
+# hosts
+[all:vars]
+ansible_user=root
+ansible_port=22
+ansible_password=zzzz
+
+[server]
+uat-80 ansible_host=127.0.0.80 server_type=k8s-master
+uat-81 ansible_host=127.0.0.81 server_type=k8s-worker
+uat-82 ansible_host=127.0.0.82 server_type=k8s-worker
+uat-83 ansible_host=127.0.0.83 server_type=k8s-worker
+uat-84 ansible_host=127.0.0.84 server_type=k8s-worker
