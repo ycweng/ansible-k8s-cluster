@@ -74,3 +74,75 @@ mount -t glusterfs 10.110.54.82:/cps-jfrog /mnt/glusterfs/cps-jfrog/
 kubectl apply -f gluster-endpoint-svc.yml
 
 ```
+
+# install traefik
+```bash=
+helm repo add traefik https://traefik.github.io/charts
+
+helm repo update
+
+helm install -n kube-system traefik traefik/traefik
+
+helm uninstall traefik traefik/traefik
+
+```
+## traefik dashboard
+```bash=
+# deployment加上
+--api.insecure=true
+# kube apply web-ui svc && ingress
+
+```
+https://godleon.github.io/blog/Kubernetes/k8s-Install-traefik-as-Ingress-Controller/
+## traefik dashboard
+```bash
+kubectl create namespace monitor
+```
+
+---
+# add master
+```bash
+[root@cps-k8s-master-10-110-54-80 ~]# kubeadm init phase upload-certs --upload-certs
+I0822 17:10:48.389485  255325 version.go:255] remote version is much newer: v1.31.0; falling back to: stable-1.23
+[upload-certs] Storing the certificates in Secret "kubeadm-certs" in the "kube-system" Namespace
+[upload-certs] Using certificate key:
+0c22f7afc7c6a5615bcbe2a9ff117eb36fc16448183bbded24eff56b7f039473
+
+
+[root@cps-k8s-master-10-110-54-80 ~]# kubeadm token create --print-join-command                                                                                                              
+kubeadm join 10.110.54.80:6443 --token qn84nk.9awexr86o5gwmguh --discovery-token-ca-cert-hash sha256:ca4293a94694d2d44b9f9a4314c2498ce34feda0a408279f3e05c68a7275f44c
+
+### 兩段拼接 在新的節點輸入
+
+kubeadm join 10.110.54.80:6443 --token 258rcg.jyx2efen3g6tirkn --discovery-token-ca-cert-hash sha256:ca4293a94694d2d44b9f9a4314c2498ce34feda0a408279f3e05c68a7275f44c --control-plane --certificate-key 0c22f7afc7c6a5615bcbe2a9ff117eb36fc16448183bbded24eff56b7f039473 --cri-socket /run/containerd/containerd.sock
+```
+- edit
+```bash
+kubectl -n kube-system edit cm kubeadm-config
+
+---
+apiVersion: v1
+data:
+  ClusterConfiguration: |
+    apiServer:
+      extraArgs:
+        authorization-mode: Node,RBAC
+      timeoutForControlPlane: 4m0s
+    apiVersion: kubeadm.k8s.io/v1beta3
+    certificatesDir: /etc/kubernetes/pki
+    clusterName: kubernetes
+    controllerManager: {}
+    dns: {}
+    etcd:
+      local:
+        dataDir: /var/lib/etcd
+    imageRepository: k8s.gcr.io
+    kind: ClusterConfiguration
+    kubernetesVersion: v1.23.2
+    controlPlaneEndpoint: "10.110.54.80:6443"  ## <-這
+    networking:
+      dnsDomain: cluster.local
+      podSubnet: 10.244.0.0/16
+      serviceSubnet: 10.1.0.0/16
+    scheduler: {}
+```
