@@ -1,0 +1,14 @@
+---
+- name: "Install required packages on CentOS "
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - unzip
+    - tar
+    - yum-utils
+    - glusterfs-client
+    - glusterfs-fuse
+    - iproute-tc
+    - lvm2
+    - nfs-utils

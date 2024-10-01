@@ -1,0 +1,19 @@
+---
+- name: "Install containerd on CentOS "
+  unarchive:
+    src: "https://github.com/containerd/containerd/releases/download/v1.7.22/cri-containerd-cni-1.7.22-linux-amd64.tar.gz"
+    dest: "/"
+    remote_src: yes
+
+- name: "Create a directory for cni binary"
+  file: path=/opt/cni/bin/ state=directory
+
+- name: "Create a directory for cni config files"
+  file: path=/etc/cni/net.d/ state=directory
+
+- name: "Create a directory for containerd config"
+  file: path=/etc/containerd state=directory
+
+- name: "initial containerd configuration"
+  shell: |
+    containerd config default > /etc/containerd/config.toml 
