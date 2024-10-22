@@ -25,5 +25,5 @@ kubectl label node uat-k8s-worker-10-110-54-203 storagenode=glusterfs
 ./gk-deploy -g -n kube-system --admin-key admin@cps2024 --user-key user@cps2024 topology.json 
 
 # 反悔
- ./gk-deploy -g --abort -n kube-system
+ ./gk-deploy -g --abort -n kube-system --admin-key admin@cps2024 --user-key user@cps2024
 ```
