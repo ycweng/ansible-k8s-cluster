@@ -1,0 +1,56 @@
+{
+	"clusters": [
+		{
+			"nodes": [
+				{
+					"node": {
+						"hostnames": {
+							"manage": [
+								"uat-k8s-worker-10-110-54-203"
+							],
+							"storage": [
+								"10.110.54.203"
+							]
+						},
+						"zone": 1
+					},
+					"devices": [
+						"/dev/vdb"
+					]
+				},
+				{
+					"node": {
+						"hostnames": {
+							"manage": [
+								"uat-k8s-worker-10-110-54-204"
+							],
+							"storage": [
+								"10.110.54.204"
+							]
+						},
+						"zone": 1
+					},
+					"devices": [
+						"/dev/vdb"
+					]
+				},
+				{
+					"node": {
+						"hostnames": {
+							"manage": [
+								"uat-k8s-worker-10-110-54-205"
+							],
+							"storage": [
+								"10.110.54.205"
+							]
+						},
+						"zone": 1
+					},
+					"devices": [
+						"/dev/vdb"
+					]
+				}
+			]
+		}
+	]
+}
