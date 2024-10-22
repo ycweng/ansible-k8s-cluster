@@ -22,7 +22,8 @@ kubectl label node uat-k8s-worker-10-110-54-203 storagenode=glusterfs
 # k8s上部屬glusterfs
 - 使用`kube-system`
 ```bash 
-./gk-deploy -g -n kube-system
+./gk-deploy -g -n kube-system --admin-key admin@cps2024 --user-key user@cps2024 topology.json 
+
 # 反悔
  ./gk-deploy -g --abort -n kube-system
 ```
