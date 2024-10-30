@@ -20,9 +20,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      annotations:
-        kubectl.kubernetes.io/restartedAt: "2024-07-05T15:03:00Z"
-      creationTimestamp: null
       labels:
         app: docker-registry-ui
     spec:
@@ -49,9 +46,6 @@ spec:
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
       volumes:
         - configMap:
             defaultMode: 420
