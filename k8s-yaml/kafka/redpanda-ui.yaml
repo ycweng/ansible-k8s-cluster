@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redpanda-kafka-ui
+  name: redpanda-kafka-ui
+  namespace: cps-system
+spec:
+  selector:
+    matchLabels:
+      app: redpanda-kafka-ui
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redpanda-kafka-ui
+    spec:
+      containers:
+        - name: redpanda-kafka-ui
+          image: docker.redpanda.com/redpandadata/console:v2.6.1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: TZ
+              value: "CST-8"
+            - name: CONFIG_FILEPATH
+              value: "/etc/redpanda/redpanda-console-config.yaml"
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+            limits:
+              cpu: 2
+              memory: 2Gi
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/redpanda/"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: redpanda-console-config
+            items:
+              - key: "redpanda-console-config.yaml"
+                path: "redpanda-console-config.yaml"
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redpanda-console-config
+  namespace: cps-system
+data:
+  redpanda-console-config.yaml: |-
+    kafka:
+      brokers:
+        - kafka-0.kafka-headless.cps-system.svc.cluster.local:9092
+        - kafka-1.kafka-headless.cps-system.svc.cluster.local:9092
+        - kafka-2.kafka-headless.cps-system.svc.cluster.local:9092
+      #schemaRegistry:
+      #  enabled: true
+      #  urls: http://10.110.55.66:30581
+    #connect:
+    #  enabled: true
+    #  clusters:
+    #   - name: cps-mcd-connect-cluster
+    #      url: http://kafka-connect-mcd.cps-system:8083
+    server:
+      basePath: /redpanda-kafka-ui
+---
+
+apiVersion: v1
+kind: Service
+namespace: cps-system
+metadata:
+  name: redpanda-kafka-ui
+  labels:
+    app: redpanda-kafka-ui
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+  selector:
+    app: redpanda-kafka-ui

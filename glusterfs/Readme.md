@@ -67,7 +67,7 @@ metadata:
   name: glusterfs-storage
 provisioner: kubernetes.io/glusterfs
 parameters:
-  resturl: "http://10.244.1.6:8080"
+  resturl: "http://10.110.54.201:32444"
   restuser: "admin"
   restuserkey: "admin@cps2024"
   volumetype: "replicate:3" 
@@ -77,7 +77,7 @@ parameters:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: myclaim
+  name: cps-system-common
   annotations:
     volume.beta.kubernetes.io/storage-class: "glusterfs-storage"   
 spec:
@@ -85,7 +85,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi  
+      storage: 50Gi  
 ```
 
 # troubleshoot

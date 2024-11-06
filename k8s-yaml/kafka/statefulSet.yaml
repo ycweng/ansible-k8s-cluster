@@ -1,0 +1,166 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kafka
+  namespace: cps-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka
+  name: kafka-headless
+  namespace: cps-system
+spec:
+  clusterIP: None
+  clusterIPs:
+    - None
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: kfk-internal
+      port: 9092
+      protocol: TCP
+      targetPort: kfk-internal
+    - name: kfk-controller
+      port: 29093
+      protocol: TCP
+      targetPort: kfk-controller
+    - name: jmx-agent
+      port: 29999
+      protocol: TCP
+      targetPort: jmx-agent
+  selector:
+    app: kafka
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: kafka
+  name: kafka
+  namespace: cps-system
+spec:
+  podManagementPolicy: Parallel
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: kafka
+  serviceName: kafka-headless
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      serviceAccountName: kafka
+      containers:
+        - command:
+            - sh
+            - -exc
+            - |
+              export CLUSTER_ID="wwAV2o3xRqCbHsd66CwzRA" && \
+              export KAFKA_NODE_ID=${HOSTNAME##*-} 
+              export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${POD_NAME}.kafka-headless.cps-system.svc.cluster.local:9092
+              
+              exec /etc/confluent/docker/run
+          env:
+            - name: KAFKA_PROCESS_ROLES
+              value: 'broker,controller'
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: "0@kafka-0.kafka-headless.cps-system.svc.cluster.local:29093,1@kafka-1.kafka-headless.cps-system.svc.cluster.local:29093,2@kafka-2.kafka-headless.cps-system.svc.cluster.local:29093"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_LISTENERS
+              value: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: KAFKA_DEFAULT_REPLICATION_FACTOR
+              value: "3"
+            - name: KAFKA_LOG_RETENTION_HOURS
+              value: "72"
+            - name: TZ
+              value: "CST-8"
+            - name: KAFKA_JMX_PORT
+              value: "9101"
+            - name: KAFKA_JMX_HOSTNAME
+              value: "0.0.0.0"
+            - name: KAFKA_OPTS
+              value: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent-1.0.1.jar=9999:/opt/jmx-exporter/kafka-kraft-3_0_0.yml"
+          name: kafka
+          image: confluentinc/cp-kafka:7.7.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9092
+              name: kfk-internal
+              protocol: TCP
+            - containerPort: 29093
+              name: kfk-controller
+              protocol: TCP
+            - containerPort: 29999
+              name: jmx-agent
+              protocol: TCP
+          resources:
+            limits:
+              cpu: "2"
+              memory: 8Gi
+            requests:
+              cpu: "2"
+              memory: 8Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            # readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsUser: 1000
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - name: config
+              mountPath: /etc/kafka
+            - name: cps-system-share
+              mountPath: /opt
+            - name: kafka-pv
+              mountPath: /var/lib/kafka/
+      nodeSelector:
+        server-type: kafka
+      tolerations:
+        - key: "server-type"
+          operator: "Equal"
+          value: "kafka"
+          effect: "NoSchedule"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1000
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: config
+        - name: cps-system-share
+          nfs:
+            path: /data_share/cps-system-share
+            server: 10.110.54.201
+  volumeClaimTemplates:
+    - metadata:
+        name: kafka-pv
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: "local-storage"
+        resources:
+          requests:
+            storage: 300Gi
+  updateStrategy:
+    type: RollingUpdate
+

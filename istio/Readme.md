@@ -43,10 +43,10 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: cps-demo-route
+  name: report-route
 spec:
   gateways:
-    - cps-demo/demo-gateway
+    - istio-system/istio-gateway
   hosts:
     - 10.110.54.201
   http:

@@ -1,0 +1,29 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-cluster
+  labels:
+    app: redis-cluster
+spec:
+  ports:
+    - name: client
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+    - name: gossip
+      protocol: TCP
+      port: 16379
+      targetPort: 16379
+  selector:
+    app: redis-cluster
+  clusterIP: None
+  clusterIPs:
+    - None
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  internalTrafficPolicy: Cluster
+status:
+  loadBalancer: {}

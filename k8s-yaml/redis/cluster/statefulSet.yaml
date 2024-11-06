@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-cluster
+spec:
+  serviceName: redis-cluster
+  replicas: 6
+  selector:
+    matchLabels:
+      app: redis-cluster
+  template:
+    metadata:
+      labels:
+        app: redis-cluster
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: redis-cluster-configmap
+            defaultMode: 420
+      containers:
+        - name: redis
+          image: redis:7.4.1
+          command: ['redis-server']
+          args: ['/conf/redis.conf', '--cluster-announce-ip', '$(REDIS_CLUSTER_ANNOUNCE_IP)']
+          env:
+            - name: REDIS_CLUSTER_ANNOUNCE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+            limits:
+              cpu: '1'
+              memory: 2Gi
+            requests:
+              cpu: '1'
+              memory: 2Gi
+          ports:
+            - containerPort: 6379
+              name: client
+            - containerPort: 16379
+              name: gossip
+          volumeMounts:
+            - name: config-volume
+              mountPath: /conf
+            - name: data
+              mountPath: /data
+      nodeSelector:
+        server-type: redis
+      tolerations:
+        - key: "server-type"
+          operator: "Equal"
+          value: "redis"
+          effect: "NoSchedule"
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        storageClassName: "glusterfs-storage"
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 16Gi
+  updateStrategy:
+    type: OnDelete
